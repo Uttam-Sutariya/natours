@@ -14,6 +14,7 @@ const app = express();
 // Routers
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
+const reviewRouter = require("./routes/reviewRoutes");
 
 // 1) Middlewares
 
@@ -71,6 +72,7 @@ app.use(express.static(`${__dirname}/public`));
 /* using router as middleware */
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 /* For unavailable routes */
 app.all("*", (req, res, next) => {

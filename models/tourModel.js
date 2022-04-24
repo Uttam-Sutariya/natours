@@ -77,7 +77,37 @@ const tourSchema = new mongoose.Schema(
             type: Date,
             default: Date.now()
         },
-        startDates: [Date]
+        startDates: [Date],
+        startLocation: {
+            //GeoJSON
+            type: {
+                type: String,
+                default: "Point",
+                enum: ["Point"]
+            },
+            coordinates: [Number],
+            address: String,
+            description: String
+        },
+        locations: [
+            {
+                type: {
+                    type: String,
+                    default: "Point",
+                    enum: ["Point"]
+                },
+                coordinates: [Number],
+                address: String,
+                description: String,
+                day: Number
+            }
+        ],
+        guides: [
+            {
+                type: mongoose.Schema.ObjectId,
+                ref: "User"
+            }
+        ]
     },
     {
         toJSON: { virtuals: true },
@@ -94,6 +124,13 @@ const tourSchema = new mongoose.Schema(
 
 //! Don't use arrow function in get() : reason => this refers global obj in arrow function
 
+// virtual populate
+tourSchema.virtual("reviews", {
+    ref: "Review",
+    foreignField: "tour",
+    localField: "_id"
+});
+
 tourSchema.virtual("durationWeeks").get(function () {
     return this.duration / 7;
 });
@@ -105,6 +142,21 @@ tourSchema.pre("save", function (next) {
     this.slug = slugify(this.name, { lower: true });
     next();
 });
+
+tourSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: "guides",
+        select: "-__v -passwordChangedAt"
+    });
+
+    next();
+});
+
+// tourSchema.pre("save", async function (next) {
+//     const guidesPromises = this.guides.map(async (id) => User.findById(id));
+//     this.guides = await Promise.all(guidesPromises);
+//     next();
+// });
 
 // In post middleware we don't have access to (this) instead of we have document access (doc)
 // tourSchema.post("save", function (doc, next) {
